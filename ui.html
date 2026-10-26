@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetMesh — Network Lab Harness</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0f0f0f;
+            --fg: #e0e0e0;
+            --accent: #00d4ff;
+            --error: #ff6b6b;
+            --success: #51cf66;
+            --border: #333;
+            --input-bg: #1a1a1a;
+        }
+
+        body {
+            font-family: 'Monaco', 'Courier New', monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .warning {
+            background: #1a1a0f;
+            border-left: 3px solid var(--error);
+            padding: 12px;
+            margin: 20px 0;
+            font-size: 11px;
+            color: #d4a574;
+        }
+
+        .control-panel {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            color: var(--accent);
+            letter-spacing: 0.5px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--fg);
+            font-family: inherit;
+            font-size: 13px;
+            border-radius: 3px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .input-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        button {
+            background: var(--accent);
+            border: none;
+            color: #000;
+            padding: 12px 24px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #00b8d4;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            background: #333;
+            color: var(--fg);
+        }
+
+        .btn-secondary:hover {
+            background: #444;
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #ff5555;
+        }
+
+        .task-list {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .task-item {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            padding: 16px;
+            border-radius: 4px;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .task-id {
+            font-size: 11px;
+            color: #888;
+            font-family: monospace;
+        }
+
+        .task-status {
+            font-size: 11px;
+            text-transform: uppercase;
+            padding: 4px 8px;
+            border-radius: 2px;
+            font-weight: bold;
+        }
+
+        .status-running {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--accent);
+        }
+
+        .status-ok {
+            background: rgba(81, 207, 102, 0.2);
+            color: var(--success);
+        }
+
+        .status-err {
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--error);
+        }
+
+        .task-output {
+            background: #000;
+            border: 1px solid #222;
+            padding: 12px;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #0f0;
+            border-radius: 3px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 1s infinite;
+            margin-right: 6px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .module-description {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+
+            .button-row {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+
+        .dynamic-fields {
+            background: #0a0a0a;
+            padding: 12px;
+            border-radius: 3px;
+            margin: 12px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ NetMesh</h1>
+            <div class="subtitle">Local Network Lab Harness</div>
+            <div class="warning">
+                ⚠️ <strong>AUTHORIZED USE ONLY</strong><br>
+                Use only on networks and hosts you own or have explicit permission to test.
+                Unauthorized network testing is illegal in most jurisdictions.
+            </div>
+        </header>
+
+        <div class="control-panel">
+            <h2 style="font-size: 16px; margin-bottom: 20px;">Execute Module</h2>
+
+            <div class="form-group">
+                <label for="module-select">Module</label>
+                <select id="module-select">
+                    <option value="">— Select a module —</option>
+                </select>
+                <div class="module-description" id="module-desc"></div>
+            </div>
+
+            <div id="dynamic-inputs" class="dynamic-fields" style="display: none;"></div>
+
+            <div class="button-row">
+                <button id="run-btn" disabled>▶ Run</button>
+                <button id="stop-btn" class="btn-danger" style="display: none;">⏹ Stop All</button>
+            </div>
+        </div>
+
+        <h2 style="font-size: 16px; margin-top: 30px; margin-bottom: 20px;">Active Tasks</h2>
+        <div class="task-list" id="task-list">
+            <div class="empty-state">No tasks running</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        const MODULES_DESC = {
+            ping: 'ICMP echo latency test',
+            sysinfo: 'Gather system info',
+            shell: 'Execute shell command',
+            scan: 'TCP port scan',
+            httpflood: 'Paced HTTP GET load test',
+            slowloris: 'Slow-client connection test',
+            tcpflood: 'TCP connection flood',
+            udpflood: 'UDP packet flood',
+            synflood: 'Raw SYN flood (requires root/admin)'
+        };
+
+        const MODULES_FIELDS = {
+            ping: [
+                { name: 'host', label: 'Host', type: 'text', placeholder: '1.1.1.1', required: true }
+            ],
+            sysinfo: [],
+            shell: [
+                { name: 'cmd', label: 'Command', type: 'text', placeholder: 'ls -la', required: true, full: true }
+            ],
+            scan: [
+                { name: 'host', label: 'Host', type: 'text', placeholder: '192.168.1.1', required: true },
+                { name: 'start', label: 'Port Start', type: 'number', value: '1', required: true },
+                { name: 'end', label: 'Port End', type: 'number', value: '1024', required: true }
+            ],
+            httpflood: [
+                { name: 'url', label: 'URL', type: 'text', placeholder: 'http://target.com', required: true, full: true },
+                { name: 'rate', label: 'Rate (req/s)', type: 'number', value: '10', required: true },
+                { name: 'duration', label: 'Duration (s)', type: 'number', value: '30', required: true },
+                { name: 'jitter', label: 'Jitter', type: 'checkbox', value: '1' }
+            ],
+            slowloris: [
+                { name: 'host', label: 'Host', type: 'text', placeholder: 'target.com', required: true },
+                { name: 'port', label: 'Port', type: 'number', value: '80', required: true },
+                { name: 'sockets', label: 'Sockets', type: 'number', value: '50', required: true },
+                { name: 'duration', label: 'Duration (s)', type: 'number', value: '60', required: true },
+                { name: 'interval', label: 'Keepalive (s)', type: 'number', value: '10', required: true }
+            ],
+            tcpflood: [
+                { name: 'host', label: 'Host', type: 'text', placeholder: 'target.com', required: true },
+                { name: 'port', label: 'Port', type: 'number', value: '80', required: true },
+                { name: 'duration', label: 'Duration (s)', type: 'number', value: '30', required: true },
+                { name: 'rate', label: 'Rate (conn/s)', type: 'number', value: '10', required: true },
+                { name: 'jitter', label: 'Jitter', type: 'checkbox', value: '1' }
+            ],
+            udpflood: [
+                { name: 'host', label: 'Host', type: 'text', placeholder: 'target.com', required: true },
+                { name: 'port', label: 'Port', type: 'number', value: '80', required: true },
+                { name: 'duration', label: 'Duration (s)', type: 'number', value: '30', required: true },
+                { name: 'rate', label: 'Rate (pkt/s)', type: 'number', value: '10', required: true },
+                { name: 'size', label: 'Packet Size', type: 'number', value: '512', required: true },
+                { name: 'fragment', label: 'Fragment', type: 'checkbox', value: '1' }
+            ],
+            synflood: [
+                { name: 'host', label: 'Host', type: 'text', placeholder: 'target.com', required: true },
+                { name: 'port', label: 'Port', type: 'number', value: '80', required: true },
+                { name: 'duration', label: 'Duration (s)', type: 'number', value: '30', required: true },
+                { name: 'rate', label: 'Rate (syn/s)', type: 'number', value: '100', required: true },
+                { name: 'spoof', label: 'Spoof Source IP', type: 'checkbox', value: '1' }
+            ]
+        };
+
+        let tasks = {};
+
+        // Load modules
+        async function loadModules() {
+            try {
+                const resp = await fetch(API_BASE + '/api/modules');
+                const data = await resp.json();
+                const select = document.getElementById('module-select');
+                Object.keys(MODULES_DESC).forEach(mod => {
+                    const opt = document.createElement('option');
+                    opt.value = mod;
+                    opt.textContent = mod;
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                console.error('Failed to load modules:', e);
+            }
+        }
+
+        // Render dynamic fields
+        document.getElementById('module-select').addEventListener('change', (e) => {
+            const mod = e.target.value;
+            const desc = document.getElementById('module-desc');
+            const dynamicDiv = document.getElementById('dynamic-inputs');
+            const runBtn = document.getElementById('run-btn');
+
+            desc.textContent = MODULES_DESC[mod] || '';
+            runBtn.disabled = !mod;
+
+            if (!mod) {
+                dynamicDiv.style.display = 'none';
+                return;
+            }
+
+            const fields = MODULES_FIELDS[mod] || [];
+            if (fields.length === 0) {
+                dynamicDiv.style.display = 'none';
+                return;
+            }
+
+            dynamicDiv.innerHTML = '';
+            dynamicDiv.style.display = 'block';
+
+            let currentRow = null;
+            let rowItems = 0;
+
+            fields.forEach((field, idx) => {
+                if (field.full || !currentRow || rowItems >= 2) {
+                    currentRow = document.createElement('div');
+                    currentRow.className = field.full ? 'input-row full' : 'input-row';
+                    dynamicDiv.appendChild(currentRow);
+                    rowItems = 0;
+                }
+
+                const group = document.createElement('div');
+                group.className = 'form-group';
+
+                if (field.type === 'checkbox') {
+                    const label = document.createElement('label');
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.id = field.name;
+                    input.value = field.value;
+                    label.appendChild(input);
+                    label.appendChild(document.createTextNode(' ' + field.label));
+                    group.appendChild(label);
+                } else {
+                    const label = document.createElement('label');
+                    label.htmlFor = field.name;
+                    label.textContent = field.label;
+                    group.appendChild(label);
+
+                    const input = document.createElement('input');
+                    input.type = field.type || 'text';
+                    input.id = field.name;
+                    input.placeholder = field.placeholder || '';
+                    if (field.value) input.value = field.value;
+                    if (field.required) input.required = true;
+                    group.appendChild(input);
+                }
+
+                currentRow.appendChild(group);
+                rowItems++;
+            });
+        });
+
+        // Run module
+        document.getElementById('run-btn').addEventListener('click', async () => {
+            const mod = document.getElementById('module-select').value;
+            if (!mod) return;
+
+            const fields = MODULES_FIELDS[mod] || [];
+            const args = {};
+            fields.forEach(field => {
+                const el = document.getElementById(field.name);
+                if (field.type === 'checkbox') {
+                    args[field.name] = el.checked ? '1' : '0';
+                } else {
+                    args[field.name] = el.value;
+                }
+            });
+
+            try {
+                const resp = await fetch(API_BASE + '/api/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ module: mod, args })
+                });
+                const data = await resp.json();
+                const taskId = data.task_id;
+                tasks[taskId] = { module: mod, status: 'running', output: '', args };
+                pollTask(taskId);
+                renderTasks();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        });
+
+        // Poll task status
+        async function pollTask(taskId) {
+            const poll = setInterval(async () => {
+                try {
+                    const resp = await fetch(API_BASE + `/api/task/${taskId}`);
+                    const data = await resp.json();
+                    if (data.status && data.status !== 'running') {
+                        clearInterval(poll);
+                        tasks[taskId].status = data.status;
+                        tasks[taskId].output = data.out || '';
+                    } else if (data.out) {
+                        tasks[taskId].output = data.out || '';
+                    }
+                    renderTasks();
+                } catch (e) {
+                    console.error('Poll error:', e);
+                }
+            }, 500);
+        }
+
+        // Stop all tasks
+        document.getElementById('stop-btn').addEventListener('click', async () => {
+            Object.keys(tasks).forEach(id => {
+                fetch(API_BASE + `/api/stop/${id}`, { method: 'POST' }).catch(e => console.error(e));
+            });
+        });
+
+        // Render tasks
+        function renderTasks() {
+            const list = document.getElementById('task-list');
+            const active = Object.keys(tasks).filter(id => tasks[id].status === 'running').length > 0;
+            document.getElementById('stop-btn').style.display = active ? 'block' : 'none';
+
+            if (Object.keys(tasks).length === 0) {
+                list.innerHTML = '<div class="empty-state">No tasks running</div>';
+                return;
+            }
+
+            list.innerHTML = Object.entries(tasks)
+                .sort((a, b) => b[0].localeCompare(a[0]))
+                .map(([id, task]) => `
+                    <div class="task-item">
+                        <div class="task-header">
+                            <div>
+                                <strong>${task.module}</strong>
+                                <div class="task-id">ID: ${id}</div>
+                            </div>
+                            <span class="task-status status-${task.status}">
+                                ${task.status === 'running' ? '<span class="spinner"></span>' : ''}
+                                ${task.status}
+                            </span>
+                        </div>
+                        <div class="task-output">${escapeHtml(task.output || '(pending...)')}</div>
+                    </div>
+                `).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize
+        loadModules();
+        renderTasks();
+    </script>
+</body>
+</html>

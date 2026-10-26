@@ -1,0 +1,4 @@
+# netmesh — zero required deps for core; these are optional niceties
+# (the code works with stdlib only; install if you want the extras)
+
+(Everything runs on Python 3.9+ stdlib — no installs needed.)
